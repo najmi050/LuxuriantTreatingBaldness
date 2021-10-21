@@ -1,0 +1,91 @@
+---
+title: "Assignment2_210034046"
+output: pdf_document
+---
+
+```{r, engine ="sashtml"} 
+knitr::opts_chunk$set(echo = TRUE)
+#importing baldy.csv data
+PROC import out= Najmi050.baldy
+dbms=csv replace
+file="/home/u59691081/sasuser.v94/SasFolder/New Folder3/Baldy.csv";
+getnames=yes;
+datarow=2;
+run;
+DATA najmi050.baldy_mm;
+SET najmi050.baldy;
+Luxuriant=luxuriant*25.4;
+placebo=placebo*25.4;
+baldbegone=baldbegone*25.4;
+skinheadnomore=skinheadnomore*25.4;
+RUN;
+#checking contents
+proc contents data=najmi050.baldy_mm;
+run;
+#checking numeric variable
+proc univariate data=najmi050.baldy_mm;
+run;
+
+
+data najmi050.LuxuriantVsPlacebo;
+set najmi050.baldy_mm;
+keep luxuriant placebo;
+run;
+
+proc transpose data=najmi050.luxuriantvsplacebo out=temp;
+by rows:;
+var luxuriant placebo;
+run;
+proc transpose data=temp out=want;
+   by _name_;
+   var col:;
+run;
+proc print data=want;
+run;
+data najmi050.LuxuriantVsPlacebo;
+set work.want;
+rename _name_=LUXorPlacebo col1=growth_mm;
+run;
+proc print data=najmi050.LuxuriantVsPlacebo;
+run;
+
+
+proc ttest alpha=0.05 data=najmi050.luxuriantvsplacebo sided=2;
+class LUXorPlacebo;
+var growth_mm;
+run;
+#Assumption that data is normal, doesn't satisfy.
+#To this end, we use non-parametric tests.
+proc npar1way data=najmi050.luxuriantvsplacebo wilcoxon;
+title "non-parametric test for Luxuriant vs Placebo";
+class luxorplacebo;
+var growth_mm;
+exact wilcoxon;
+run;
+
+
+#pvalue <0.0001 which is lower than the 0.05 significance level.
+#Therefore, we conclude that the placebo and luxuriant have significantly different growth rates.
+
+
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars, eval=FALSE, include=FALSE}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, eval=FALSE, include=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
